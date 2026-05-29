@@ -1,0 +1,73 @@
+interface HubAPI {
+  getSettings(): Promise<Record<string, string>>
+  saveSettings(s: Record<string, string>): Promise<void>
+
+  spotifyIsConnected(): Promise<boolean>
+  spotifyConnect(): Promise<void>
+  spotifyDisconnect(): Promise<void>
+  spotifyGetCurrentTrack(): Promise<SpotifyPlayback | null>
+  spotifyPlayPause(isPlaying: boolean): Promise<void>
+  spotifyNext(): Promise<void>
+  spotifyPrevious(): Promise<void>
+  spotifySetVolume(v: number): Promise<void>
+  spotifyGetPlaylists(): Promise<SpotifyPlaylist[]>
+  spotifyPlayPlaylist(uri: string): Promise<void>
+  spotifyGetQueue(): Promise<{ currently_playing: SpotifyTrack | null; queue: SpotifyTrack[] }>
+
+  gmailIsConnected(): Promise<boolean>
+  gmailConnect(): Promise<void>
+  gmailDisconnect(): Promise<void>
+  gmailGetInbox(query?: string): Promise<GmailMessage[]>
+  gmailGetMessage(id: string): Promise<GmailFullMessage>
+  gmailSendReply(opts: { to: string; subject: string; body: string; threadId: string; inReplyTo: string }): Promise<void>
+  gmailSearch(query: string): Promise<GmailMessage[]>
+
+  openExternal(url: string): Promise<void>
+}
+
+interface SpotifyTrack {
+  id: string
+  name: string
+  artists: { name: string }[]
+  album: { name: string; images: { url: string }[] }
+  duration_ms: number
+}
+
+interface SpotifyPlayback {
+  is_playing: boolean
+  progress_ms: number
+  item: SpotifyTrack | null
+  device: { volume_percent: number; name: string } | null
+}
+
+interface SpotifyPlaylist {
+  id: string
+  name: string
+  images: { url: string }[]
+  tracks: { total: number }
+  uri: string
+}
+
+interface GmailMessage {
+  id: string
+  threadId: string
+  snippet: string
+  from: string
+  subject: string
+  date: string
+  unread: boolean
+}
+
+interface GmailFullMessage extends GmailMessage {
+  body: string
+  messageId: string
+  to: string
+}
+
+declare global {
+  interface Window {
+    hub: HubAPI
+  }
+}
+
+export {}
