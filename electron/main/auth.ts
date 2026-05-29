@@ -5,20 +5,13 @@ import * as store from './store'
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
-function randomPort(): Promise<number> {
-  return new Promise((resolve) => {
-    const srv = http.createServer()
-    srv.listen(0, () => {
-      const port = (srv.address() as { port: number }).port
-      srv.close(() => resolve(port))
-    })
-  })
-}
+const SPOTIFY_PORT = 8888
+const GMAIL_PORT = 8889
 
 function waitForCallback(port: number): Promise<URLSearchParams> {
   return new Promise((resolve, reject) => {
     const server = http.createServer((req, res) => {
-      const params = new URL(req.url!, `http://localhost:${port}`).searchParams
+      const params = new URL(req.url!, `http://127.0.0.1:${port}`).searchParams
       res.writeHead(200, { 'Content-Type': 'text/html' })
       res.end(`<html><body style="font-family:sans-serif;background:#121212;color:#fff;display:flex;align-items:center;justify-content:center;height:100vh;margin:0">
         <h2>✓ Connected! You can close this tab.</h2>
@@ -45,8 +38,8 @@ export async function spotifyConnect(): Promise<void> {
   const settings = store.get('settings')
   if (!settings?.spotifyClientId) throw new Error('Spotify Client ID not set')
 
-  const port = await randomPort()
-  const redirectUri = `http://localhost:${port}/callback`
+  const port = SPOTIFY_PORT
+  const redirectUri = `http://127.0.0.1:${port}/callback`
   const verifier = crypto.randomBytes(64).toString('base64url')
   const challenge = crypto.createHash('sha256').update(verifier).digest('base64url')
   const state = crypto.randomBytes(16).toString('hex')
@@ -132,8 +125,8 @@ export async function gmailConnect(): Promise<void> {
   if (!settings?.googleClientId || !settings?.googleClientSecret)
     throw new Error('Google Client ID and Secret not set')
 
-  const port = await randomPort()
-  const redirectUri = `http://localhost:${port}/callback`
+  const port = GMAIL_PORT
+  const redirectUri = `http://127.0.0.1:${port}/callback`
   const state = crypto.randomBytes(16).toString('hex')
   const verifier = crypto.randomBytes(64).toString('base64url')
   const challenge = crypto.createHash('sha256').update(verifier).digest('base64url')
