@@ -69,14 +69,10 @@ export async function playPlaylist(uri: string): Promise<void> {
 
 export async function getPlaylistTracks(playlistId: string): Promise<Track[]> {
   const data = await api(`/playlists/${playlistId}`)
-  const items = data?.tracks?.items ?? []
-  const tracks = items.map((item: { track: Track | null }) => item.track).filter(Boolean) as Track[]
-  if (tracks.length === 0) {
-    const dataKeys = data ? Object.keys(data).join(',') : 'null'
-    const tracksInfo = data?.tracks ? `total=${data.tracks.total} items=${JSON.stringify(data.tracks.items).substring(0,200)}` : 'no tracks field'
-    throw new Error(`DEBUG — dataKeys: ${dataKeys} | tracks: ${tracksInfo}`)
-  }
-  return tracks
+  const items = data?.items ?? data?.tracks?.items ?? []
+  return items
+    .map((item: { track: Track | null }) => item.track)
+    .filter(Boolean) as Track[]
 }
 
 export async function toggleShuffle(state: boolean): Promise<void> {
