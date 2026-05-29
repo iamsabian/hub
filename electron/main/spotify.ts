@@ -60,7 +60,7 @@ export interface Playlist {
 
 export async function getPlaylists(): Promise<Playlist[]> {
   const data = await api('/me/playlists?limit=50')
-  return data.items
+  return data?.items ?? []
 }
 
 export async function playPlaylist(uri: string): Promise<void> {
@@ -76,5 +76,6 @@ export interface QueueItem {
 }
 
 export async function getQueue(): Promise<{ currently_playing: QueueItem | null; queue: QueueItem[] }> {
-  return api('/me/player/queue')
+  const data = await api('/me/player/queue')
+  return { currently_playing: data?.currently_playing ?? null, queue: data?.queue ?? [] }
 }

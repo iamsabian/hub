@@ -103,7 +103,7 @@ export default function SpotifyView({ connected, onConnectionChange }: Props) {
   }
 
   const track = playback?.item
-  const albumArt = track?.album.images[0]?.url
+  const albumArt = track?.album?.images?.[0]?.url
 
   return (
     <div className="flex flex-col h-full">
@@ -119,9 +119,9 @@ export default function SpotifyView({ connected, onConnectionChange }: Props) {
 
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-white truncate">{track?.name ?? 'Nothing playing'}</p>
-          <p className="text-sm text-zinc-400 truncate">{track?.artists.map((a) => a.name).join(', ')}</p>
+          <p className="text-sm text-zinc-400 truncate">{track?.artists?.map((a) => a.name).join(', ')}</p>
           {track && (
-            <p className="text-xs text-zinc-500 truncate">{track.album.name}</p>
+            <p className="text-xs text-zinc-500 truncate">{track?.album?.name}</p>
           )}
         </div>
 

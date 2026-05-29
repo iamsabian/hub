@@ -91,7 +91,7 @@ export default function Settings({ onConnectionChange }: Props) {
           <button className="text-[#1DB954] underline" onClick={() => window.hub.openExternal('https://developer.spotify.com/dashboard')}>
             developer.spotify.com
           </button>{' '}
-          and add <code className="bg-zinc-800 px-1 rounded text-white">http://localhost:PORT/callback</code> as a redirect URI (any port — Hub picks one automatically).
+          and add <code className="bg-zinc-800 px-1 rounded text-white">http://127.0.0.1:8888/callback</code> as a redirect URI.
         </p>
         <label className="block text-sm text-zinc-300 mb-1">Client ID</label>
         <input
@@ -129,7 +129,7 @@ export default function Settings({ onConnectionChange }: Props) {
           <button className="text-[#EA4335] underline" onClick={() => window.hub.openExternal('https://console.cloud.google.com/')}>
             Google Cloud project
           </button>
-          , enable the Gmail API, then create OAuth 2.0 credentials as a <strong>Desktop app</strong>. Add <code className="bg-zinc-800 px-1 rounded text-white">http://localhost</code> as an authorised redirect origin.
+          , enable the Gmail API, then create OAuth 2.0 credentials as a <strong>Desktop app</strong>. Add <code className="bg-zinc-800 px-1 rounded text-white">http://127.0.0.1:8889/callback</code> as an authorised redirect URI.
         </p>
         <label className="block text-sm text-zinc-300 mb-1">Client ID</label>
         <input

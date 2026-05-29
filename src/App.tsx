@@ -3,6 +3,7 @@ import Sidebar from './components/Sidebar'
 import SpotifyView from './components/spotify/SpotifyView'
 import GmailView from './components/gmail/GmailView'
 import Settings from './components/Settings'
+import ErrorBoundary from './components/ErrorBoundary'
 
 export type View = 'spotify' | 'gmail' | 'settings'
 
@@ -30,9 +31,11 @@ export default function App() {
         gmailConnected={gmailConnected}
       />
       <main className="flex-1 overflow-hidden">
-        {view === 'spotify' && <SpotifyView connected={spotifyConnected} onConnectionChange={handleConnectionChange} />}
-        {view === 'gmail' && <GmailView connected={gmailConnected} onConnectionChange={handleConnectionChange} />}
-        {view === 'settings' && <Settings onConnectionChange={handleConnectionChange} />}
+        <ErrorBoundary key={view}>
+          {view === 'spotify' && <SpotifyView connected={spotifyConnected} onConnectionChange={handleConnectionChange} />}
+          {view === 'gmail' && <GmailView connected={gmailConnected} onConnectionChange={handleConnectionChange} />}
+          {view === 'settings' && <Settings onConnectionChange={handleConnectionChange} />}
+        </ErrorBoundary>
       </main>
     </div>
   )
