@@ -52,6 +52,7 @@ export async function spotifyConnect(): Promise<void> {
   url.searchParams.set('code_challenge_method', 'S256')
   url.searchParams.set('code_challenge', challenge)
   url.searchParams.set('state', state)
+  url.searchParams.set('show_dialog', 'true')
 
   shell.openExternal(url.toString())
   const params = await waitForCallback(port)

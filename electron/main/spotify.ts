@@ -68,8 +68,8 @@ export async function playPlaylist(uri: string): Promise<void> {
 }
 
 export async function getPlaylistTracks(playlistId: string): Promise<Track[]> {
-  const data = await api(`/playlists/${playlistId}/tracks?limit=100`)
-  return (data?.items ?? [])
+  const data = await api(`/playlists/${playlistId}`)
+  return (data?.tracks?.items ?? [])
     .map((item: { track: Track | null }) => item.track)
     .filter(Boolean) as Track[]
 }
