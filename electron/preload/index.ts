@@ -17,6 +17,9 @@ const api = {
   spotifyGetPlaylists: () => ipcRenderer.invoke('spotify:get-playlists'),
   spotifyPlayPlaylist: (uri: string) => ipcRenderer.invoke('spotify:play-playlist', uri),
   spotifyGetQueue: () => ipcRenderer.invoke('spotify:get-queue'),
+  spotifyGetPlaylistTracks: (id: string) => ipcRenderer.invoke('spotify:get-playlist-tracks', id),
+  spotifyToggleShuffle: (state: boolean) => ipcRenderer.invoke('spotify:toggle-shuffle', state),
+  spotifyAddToQueue: (uri: string) => ipcRenderer.invoke('spotify:add-to-queue', uri),
 
   // Gmail
   gmailIsConnected: () => ipcRenderer.invoke('gmail:is-connected'),

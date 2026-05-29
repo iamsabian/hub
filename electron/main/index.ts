@@ -88,6 +88,18 @@ ipcMain.handle('spotify:get-queue', async () => {
   return spotify.getQueue()
 })
 
+ipcMain.handle('spotify:get-playlist-tracks', async (_e, id: string) => {
+  return spotify.getPlaylistTracks(id)
+})
+
+ipcMain.handle('spotify:toggle-shuffle', async (_e, state: boolean) => {
+  await spotify.toggleShuffle(state)
+})
+
+ipcMain.handle('spotify:add-to-queue', async (_e, uri: string) => {
+  await spotify.addToQueue(uri)
+})
+
 // ── Gmail ─────────────────────────────────────────────────────────────────────
 
 ipcMain.handle('gmail:is-connected', () => auth.gmailIsConnected())

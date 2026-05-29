@@ -13,6 +13,9 @@ interface HubAPI {
   spotifyGetPlaylists(): Promise<SpotifyPlaylist[]>
   spotifyPlayPlaylist(uri: string): Promise<void>
   spotifyGetQueue(): Promise<{ currently_playing: SpotifyTrack | null; queue: SpotifyTrack[] }>
+  spotifyGetPlaylistTracks(id: string): Promise<SpotifyTrack[]>
+  spotifyToggleShuffle(state: boolean): Promise<void>
+  spotifyAddToQueue(uri: string): Promise<void>
 
   gmailIsConnected(): Promise<boolean>
   gmailConnect(): Promise<void>
@@ -28,6 +31,7 @@ interface HubAPI {
 interface SpotifyTrack {
   id: string
   name: string
+  uri: string
   artists: { name: string }[]
   album: { name: string; images: { url: string }[] }
   duration_ms: number
@@ -36,6 +40,7 @@ interface SpotifyTrack {
 interface SpotifyPlayback {
   is_playing: boolean
   progress_ms: number
+  shuffle_state: boolean
   item: SpotifyTrack | null
   device: { volume_percent: number; name: string } | null
 }

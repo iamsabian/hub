@@ -67,6 +67,23 @@ export async function playPlaylist(uri: string): Promise<void> {
   await api('/me/player/play', 'PUT', { context_uri: uri })
 }
 
+export async function getPlaylistTracks(playlistId: string): Promise<Track[]> {
+  const data = await api(
+    `/playlists/${playlistId}/tracks?limit=100&fields=items(track(id,name,uri,artists,album,duration_ms))`
+  )
+  return (data?.items ?? [])
+    .map((item: { track: Track | null }) => item.track)
+    .filter(Boolean) as Track[]
+}
+
+export async function toggleShuffle(state: boolean): Promise<void> {
+  await api(`/me/player/shuffle?state=${state}`, 'PUT')
+}
+
+export async function addToQueue(uri: string): Promise<void> {
+  await api(`/me/player/queue?uri=${encodeURIComponent(uri)}`, 'POST')
+}
+
 export interface QueueItem {
   id: string
   name: string
