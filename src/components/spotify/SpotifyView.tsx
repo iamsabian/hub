@@ -191,7 +191,7 @@ export default function SpotifyView({ connected, onConnectionChange }: Props) {
                   onClick={() => handlePlaylist(pl.uri)}
                   className="w-full flex items-center gap-3 px-6 py-3 hover:bg-zinc-800/50 transition-colors text-left"
                 >
-                  {pl.images[0] ? (
+                  {pl.images?.[0] ? (
                     <img src={pl.images[0].url} alt="" className="w-10 h-10 rounded shrink-0" />
                   ) : (
                     <div className="w-10 h-10 rounded bg-zinc-800 shrink-0" />
@@ -213,7 +213,7 @@ export default function SpotifyView({ connected, onConnectionChange }: Props) {
             )}
             {queue.map((track, i) => (
               <li key={`${track.id}-${i}`} className="flex items-center gap-3 px-6 py-3 hover:bg-zinc-800/50">
-                {track.album.images[0] ? (
+                {track.album?.images?.[0] ? (
                   <img src={track.album.images[0].url} alt="" className="w-9 h-9 rounded shrink-0" />
                 ) : (
                   <div className="w-9 h-9 rounded bg-zinc-800 shrink-0" />
