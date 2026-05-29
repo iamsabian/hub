@@ -198,7 +198,7 @@ export default function SpotifyView({ connected, onConnectionChange }: Props) {
                   )}
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-white truncate">{pl.name}</p>
-                    <p className="text-xs text-zinc-500">{pl.tracks.total} tracks</p>
+                    <p className="text-xs text-zinc-500">{pl.tracks?.total ?? 0} tracks</p>
                   </div>
                 </button>
               </li>
