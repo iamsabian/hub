@@ -81,10 +81,12 @@ export default function SpotifyView({ connected }: Props) {
     setSelectedPlaylist(pl)
     setLoadingTracks(true)
     setPlaylistTracks([])
+    setError('')
     try {
       const tracks = await window.hub.spotifyGetPlaylistTracks(pl.id)
       setPlaylistTracks(tracks ?? [])
-    } catch {
+    } catch (e: unknown) {
+      setError((e as Error).message)
       setPlaylistTracks([])
     } finally {
       setLoadingTracks(false)
