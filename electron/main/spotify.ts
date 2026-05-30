@@ -12,6 +12,8 @@ async function api(path: string, method = 'GET', body?: unknown) {
   })
   if (res.status === 204) return null
   if (!res.ok) throw new Error(`Spotify ${res.status}: ${await res.text()}`)
+  const contentType = res.headers.get('content-type') ?? ''
+  if (!contentType.includes('application/json')) return null
   return res.json()
 }
 
