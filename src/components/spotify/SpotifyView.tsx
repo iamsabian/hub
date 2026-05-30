@@ -48,6 +48,7 @@ export default function SpotifyView({ connected }: Props) {
   const [selectedPlaylist, setSelectedPlaylist] = useState<SpotifyPlaylist | null>(null)
   const [playlistTracks, setPlaylistTracks] = useState<SpotifyTrack[]>([])
   const [loadingTracks, setLoadingTracks] = useState(false)
+  const [tracksBlocked, setTracksBlocked] = useState(false)
   const [queuedUris, setQueuedUris] = useState<Set<string>>(new Set())
   const [activeDevice, setActiveDevice] = useState<string>('')
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -91,12 +92,18 @@ export default function SpotifyView({ connected }: Props) {
     setSelectedPlaylist(pl)
     setLoadingTracks(true)
     setPlaylistTracks([])
+    setTracksBlocked(false)
     setError('')
     try {
       const tracks = await window.hub.spotifyGetPlaylistTracks(pl.id)
       setPlaylistTracks(tracks ?? [])
     } catch (e: unknown) {
-      setError((e as Error).message)
+      const msg = (e as Error).message ?? ''
+      if (msg.includes('OWNED_BY_OTHER')) {
+        setTracksBlocked(true)
+      } else {
+        setError(msg)
+      }
       setPlaylistTracks([])
     } finally {
       setLoadingTracks(false)
@@ -330,6 +337,14 @@ export default function SpotifyView({ connected }: Props) {
 
             {loadingTracks && (
               <div className="flex items-center justify-center py-8 text-zinc-500 text-sm">Loading…</div>
+            )}
+
+            {tracksBlocked && !loadingTracks && (
+              <div className="flex flex-col items-center justify-center py-10 px-6 text-center gap-2">
+                <span className="text-2xl">🔒</span>
+                <p className="text-sm font-medium text-zinc-300">Can't show songs</p>
+                <p className="text-xs text-zinc-500">This playlist is owned by another user. Spotify only allows track access for your own playlists through third-party apps.</p>
+              </div>
             )}
 
             <ul className="overflow-y-auto flex-1">

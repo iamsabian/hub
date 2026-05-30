@@ -113,9 +113,17 @@ export async function playPlaylist(uri: string): Promise<void> {
 }
 
 export async function getPlaylistTracks(playlistId: string): Promise<Track[]> {
-  // /tracks returns 403 — correct endpoint is /items
   // Each entry: { added_at, added_by, item: { id, name, uri, artists, album, duration_ms } }
-  const data = await api(`/playlists/${playlistId}/items?limit=100`)
+  let data: Record<string, unknown> | null
+  try {
+    data = await api(`/playlists/${playlistId}/items?limit=100`)
+  } catch (e: unknown) {
+    const msg = (e as Error).message ?? ''
+    if (msg.includes('403')) {
+      throw new Error('OWNED_BY_OTHER')
+    }
+    throw e
+  }
   const rawItems: unknown[] = Array.isArray(data?.items) ? data.items : []
   return rawItems
     .map((entry: unknown): Track | null => {
