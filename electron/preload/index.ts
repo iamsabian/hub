@@ -18,7 +18,6 @@ const api = {
   spotifyPlayPlaylist: (uri: string) => ipcRenderer.invoke('spotify:play-playlist', uri),
   spotifyGetQueue: () => ipcRenderer.invoke('spotify:get-queue'),
   spotifyGetPlaylistTracks: (id: string) => ipcRenderer.invoke('spotify:get-playlist-tracks', id),
-  spotifyDebugRaw: (id: string) => ipcRenderer.invoke('spotify:debug-raw', id),
   spotifyToggleShuffle: (state: boolean) => ipcRenderer.invoke('spotify:toggle-shuffle', state),
   spotifyAddToQueue: (uri: string) => ipcRenderer.invoke('spotify:add-to-queue', uri),
 

@@ -68,14 +68,13 @@ export async function playPlaylist(uri: string): Promise<void> {
 }
 
 export async function getPlaylistTracks(playlistId: string): Promise<Track[]> {
-  const data = await api(`/playlists/${playlistId}/tracks?limit=100`)
-  // data.items is a direct array of PlaylistTrackObjects
+  // /tracks returns 403 — the correct current endpoint is /items
+  // Each entry has { added_at, added_by, item: { id, name, uri, artists, album, duration_ms } }
+  const data = await api(`/playlists/${playlistId}/items?limit=100`)
   const rawItems: unknown[] = Array.isArray(data?.items) ? data.items : []
   return rawItems
-    .map((item: unknown): Track | null => {
-      const i = item as Record<string, unknown>
-      // Spotify's current API uses "item" field — "track" is deprecated and may be null
-      const t = (i.item ?? i.track) as Record<string, unknown> | null | undefined
+    .map((entry: unknown): Track | null => {
+      const t = (entry as Record<string, unknown>).item as Record<string, unknown> | null | undefined
       if (t?.id) return t as unknown as Track
       return null
     })

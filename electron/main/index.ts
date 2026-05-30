@@ -92,15 +92,6 @@ ipcMain.handle('spotify:get-playlist-tracks', async (_e, id: string) => {
   return spotify.getPlaylistTracks(id)
 })
 
-ipcMain.handle('spotify:debug-raw', async (_e, id: string) => {
-  const { spotifyGetToken } = await import('./auth')
-  const token = await spotifyGetToken()
-  const res = await fetch(`https://api.spotify.com/v1/playlists/${id}/tracks?limit=3`, {
-    headers: { Authorization: `Bearer ${token}` }
-  })
-  const text = await res.text()
-  return text
-})
 
 ipcMain.handle('spotify:toggle-shuffle', async (_e, state: boolean) => {
   await spotify.toggleShuffle(state)
