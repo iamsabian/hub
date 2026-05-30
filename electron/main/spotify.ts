@@ -68,23 +68,27 @@ export async function playPlaylist(uri: string): Promise<void> {
 }
 
 export async function getPlaylistTracks(playlistId: string): Promise<Track[]> {
-  const data = await api(`/playlists/${playlistId}`)
-  const rawItems: unknown[] =
-    Array.isArray(data?.items?.items) ? data.items.items :
-    Array.isArray(data?.tracks?.items) ? data.tracks.items : []
+  // Use the dedicated tracks endpoint — it always embeds full track objects
+  // Fall back to the playlist endpoint if it errors
+  let rawItems: unknown[] = []
+
+  try {
+    const data = await api(`/playlists/${playlistId}/tracks?limit=100`)
+    if (Array.isArray(data?.items)) rawItems = data.items
+  } catch {
+    const data = await api(`/playlists/${playlistId}`)
+    if (Array.isArray(data?.items?.items)) rawItems = data.items.items
+    else if (Array.isArray(data?.tracks?.items)) rawItems = data.tracks.items
+  }
 
   return rawItems
     .map((item: unknown): Track | null => {
       const i = item as Record<string, unknown>
-
-      // Format A: { track: { id, name, uri, ... } }  (classic Spotify wrapper)
-      const nested = i.track as Record<string, unknown> | null | undefined
-      if (nested && nested.id && nested.name) return nested as unknown as Track
-
-      // Format B: track fields are directly on the item (flattened)
+      // Standard format: item wraps a track object
+      const t = i.track as Record<string, unknown> | null | undefined
+      if (t && t.id && t.name) return t as unknown as Track
+      // Fallback: item itself is the track
       if (i.id && i.name && i.uri) return i as unknown as Track
-
-      // Format C: podcast episode — skip
       return null
     })
     .filter(Boolean) as Track[]
