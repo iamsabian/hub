@@ -39,11 +39,11 @@ export default function App() {
     <div className="flex flex-col h-screen w-screen overflow-hidden bg-[#121212]">
 
       {/* ── Top bar ─────────────────────────────────────────────── */}
-      <header className="flex items-center justify-between px-5 h-10 shrink-0 bg-[#0a0a0a] border-b border-zinc-800">
-        <span className="text-sm font-bold tracking-widest text-white uppercase">Hub</span>
+      <header className="relative flex items-center justify-end px-5 h-10 shrink-0 bg-[#0a0a0a] border-b border-zinc-800">
+        <span className="absolute left-1/2 -translate-x-1/2 text-sm font-bold tracking-widest text-white uppercase pointer-events-none">Hub</span>
         <button
           onClick={() => setSettingsOpen(true)}
-          className="text-zinc-400 hover:text-white transition-colors"
+          className="text-zinc-400 hover:text-white transition-colors relative z-10"
           title="Settings"
         >
           <GearIcon />
