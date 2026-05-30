@@ -103,8 +103,13 @@ export interface Playlist {
 }
 
 export async function getPlaylists(): Promise<Playlist[]> {
-  const data = await api('/me/playlists?limit=50')
-  return data?.items ?? []
+  const [playlistsData, meData] = await Promise.all([
+    api('/me/playlists?limit=50'),
+    api('/me'),
+  ])
+  const userId: string = meData?.id ?? ''
+  const all: Record<string, unknown>[] = playlistsData?.items ?? []
+  return all.filter((pl) => (pl.owner as Record<string, unknown>)?.id === userId)
 }
 
 export async function playPlaylist(uri: string): Promise<void> {
