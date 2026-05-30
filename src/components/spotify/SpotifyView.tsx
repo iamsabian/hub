@@ -113,14 +113,20 @@ export default function SpotifyView({ connected }: Props) {
   }
 
   async function handleAddToQueue(track: SpotifyTrack) {
+    if (!track.uri || queuedUris.has(track.uri)) return  // block duplicate presses
+    setQueuedUris((prev) => new Set([...prev, track.uri]))  // mark immediately to block re-clicks
     try {
       await window.hub.spotifyAddToQueue(track.uri)
-      setQueuedUris((prev) => new Set([...prev, track.uri]))
-      // clear the "added" indicator after 3s
-      setTimeout(() => {
-        setQueuedUris((prev) => { const n = new Set(prev); n.delete(track.uri); return n })
-      }, 3000)
-    } catch { /* silently ignore */ }
+    } catch (e: unknown) {
+      setError((e as Error).message)
+      // If it failed, remove it so user can try again
+      setQueuedUris((prev) => { const n = new Set(prev); n.delete(track.uri); return n })
+      return
+    }
+    // Clear the green indicator after 3 seconds
+    setTimeout(() => {
+      setQueuedUris((prev) => { const n = new Set(prev); n.delete(track.uri); return n })
+    }, 3000)
   }
 
   async function handleShuffle() {
@@ -341,11 +347,12 @@ export default function SpotifyView({ connected }: Props) {
                   <div className="flex items-center gap-2 shrink-0">
                     <span className="text-xs text-zinc-600">{ms(t.duration_ms)}</span>
                     <button
-                      onClick={() => handleAddToQueue(t)}
-                      title="Add to queue"
+                      onClick={(e) => { e.stopPropagation(); handleAddToQueue(t) }}
+                      disabled={queuedUris.has(t.uri)}
+                      title={queuedUris.has(t.uri) ? 'Added to queue' : 'Add to queue'}
                       className={`w-6 h-6 rounded-full flex items-center justify-center transition-all
                         ${queuedUris.has(t.uri)
-                          ? 'bg-[#1DB954] text-black'
+                          ? 'bg-[#1DB954] text-black cursor-default'
                           : 'opacity-0 group-hover:opacity-100 bg-zinc-700 text-white hover:bg-zinc-600'}`}
                     >
                       <PlusIcon />

@@ -134,8 +134,9 @@ export async function toggleShuffle(state: boolean): Promise<void> {
 }
 
 export async function addToQueue(uri: string): Promise<void> {
-  const deviceId = await ensureDevice()
-  await api(`/me/player/queue?uri=${encodeURIComponent(uri)}&device_id=${deviceId}`, 'POST')
+  // Do NOT call ensureDevice here — transferring the device interrupts playback.
+  // The queue endpoint works with the existing active session.
+  await api(`/me/player/queue?uri=${encodeURIComponent(uri)}`, 'POST')
 }
 
 export interface QueueItem {
