@@ -69,13 +69,15 @@ export async function playPlaylist(uri: string): Promise<void> {
 
 export async function getPlaylistTracks(playlistId: string): Promise<Track[]> {
   const data = await api(`/playlists/${playlistId}`)
-  // data.items is a PagingObject — the actual track array is at data.items.items
-  const rawItems: unknown[] =
-    Array.isArray(data?.items?.items) ? data.items.items :
-    Array.isArray(data?.tracks?.items) ? data.tracks.items : []
-  return rawItems
-    .map((item: unknown) => (item as { track: Track | null }).track)
-    .filter(Boolean) as Track[]
+  const rawItems: unknown[] = Array.isArray(data?.items?.items) ? data.items.items : []
+  const firstItem = rawItems[0] as Record<string, unknown> | undefined
+  const firstTrack = firstItem?.track
+  throw new Error(
+    `DEBUG trackExists=${firstTrack !== undefined} ` +
+    `trackNull=${firstTrack === null} ` +
+    `trackKeys=${firstTrack && typeof firstTrack === 'object' ? Object.keys(firstTrack as object).join(',') : 'n/a'} ` +
+    `trackName=${(firstTrack as Record<string,unknown>)?.name}`
+  )
 }
 
 export async function toggleShuffle(state: boolean): Promise<void> {
