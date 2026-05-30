@@ -68,26 +68,13 @@ export async function playPlaylist(uri: string): Promise<void> {
 }
 
 export async function getPlaylistTracks(playlistId: string): Promise<Track[]> {
-  // Use the dedicated tracks endpoint — it always embeds full track objects
-  // Fall back to the playlist endpoint if it errors
-  let rawItems: unknown[] = []
-
-  try {
-    const data = await api(`/playlists/${playlistId}/tracks?limit=100`)
-    if (Array.isArray(data?.items)) rawItems = data.items
-  } catch {
-    const data = await api(`/playlists/${playlistId}`)
-    if (Array.isArray(data?.items?.items)) rawItems = data.items.items
-    else if (Array.isArray(data?.tracks?.items)) rawItems = data.tracks.items
-  }
-
+  const data = await api(`/playlists/${playlistId}/tracks?limit=100&market=from_token`)
+  const rawItems: unknown[] = Array.isArray(data?.items) ? data.items : []
   return rawItems
     .map((item: unknown): Track | null => {
       const i = item as Record<string, unknown>
-      // Standard format: item wraps a track object
       const t = i.track as Record<string, unknown> | null | undefined
       if (t && t.id && t.name) return t as unknown as Track
-      // Fallback: item itself is the track
       if (i.id && i.name && i.uri) return i as unknown as Track
       return null
     })
