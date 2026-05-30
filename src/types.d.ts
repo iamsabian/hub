@@ -49,7 +49,8 @@ interface SpotifyPlaylist {
   id: string
   name: string
   images: { url: string }[]
-  tracks: { total: number }
+  items: { total: number }
+  tracks?: { total: number }
   uri: string
 }
 

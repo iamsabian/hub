@@ -257,7 +257,7 @@ export default function SpotifyView({ connected }: Props) {
                   )}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-white truncate">{pl.name}</p>
-                    <p className="text-xs text-zinc-500">{pl.tracks?.total ?? 0} songs</p>
+                    <p className="text-xs text-zinc-500">{pl.items?.total ?? pl.tracks?.total ?? 0} songs</p>
                   </div>
                   {/* Play whole playlist */}
                   <button
