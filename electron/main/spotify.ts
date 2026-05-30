@@ -69,15 +69,13 @@ export async function playPlaylist(uri: string): Promise<void> {
 
 export async function getPlaylistTracks(playlistId: string): Promise<Track[]> {
   const data = await api(`/playlists/${playlistId}`)
-  // Inspect the structure so we can verify the exact path
-  const itemsVal = data?.items
-  throw new Error(
-    `DEBUG items type=${typeof itemsVal} isArray=${Array.isArray(itemsVal)} ` +
-    `keys=${itemsVal && typeof itemsVal === 'object' ? Object.keys(itemsVal).join(',') : 'n/a'} ` +
-    `items.items isArray=${Array.isArray((itemsVal as Record<string,unknown>)?.items)} ` +
-    `items.items length=${((itemsVal as Record<string,unknown>)?.items as unknown[])?.length ?? 'n/a'} ` +
-    `first=${JSON.stringify(((itemsVal as Record<string,unknown>)?.items as unknown[])?.[0]).substring(0,150)}`
-  )
+  // data.items is a PagingObject — the actual track array is at data.items.items
+  const rawItems: unknown[] =
+    Array.isArray(data?.items?.items) ? data.items.items :
+    Array.isArray(data?.tracks?.items) ? data.tracks.items : []
+  return rawItems
+    .map((item: unknown) => (item as { track: Track | null }).track)
+    .filter(Boolean) as Track[]
 }
 
 export async function toggleShuffle(state: boolean): Promise<void> {
