@@ -103,12 +103,19 @@ export interface Playlist {
 }
 
 export async function getPlaylists(): Promise<Playlist[]> {
-  const [playlistsData, meData] = await Promise.all([
-    api('/me/playlists?limit=50'),
-    api('/me'),
-  ])
+  const meData = await api('/me')
   const userId: string = meData?.id ?? ''
-  const all: Record<string, unknown>[] = playlistsData?.items ?? []
+
+  // Paginate through all playlists (Spotify returns max 50 per page)
+  const all: Record<string, unknown>[] = []
+  let path: string | null = '/me/playlists?limit=50'
+  while (path) {
+    const data = await api(path)
+    all.push(...(data?.items ?? []))
+    const next: string | null = data?.next ?? null
+    path = next ? next.replace('https://api.spotify.com/v1', '') : null
+  }
+
   return all.filter((pl) => (pl.owner as Record<string, unknown>)?.id === userId)
 }
 
