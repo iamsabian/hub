@@ -69,12 +69,25 @@ export async function playPlaylist(uri: string): Promise<void> {
 
 export async function getPlaylistTracks(playlistId: string): Promise<Track[]> {
   const data = await api(`/playlists/${playlistId}`)
-  const rawItems: unknown[] = Array.isArray(data?.items?.items) ? data.items.items : []
-  const firstItem = rawItems[0] as Record<string, unknown> | undefined
-  throw new Error(
-    `DEBUG firstItemKeys=${Object.keys(firstItem || {}).join(',')} | ` +
-    `name=${firstItem?.name} | id=${firstItem?.id} | uri=${firstItem?.uri}`
-  )
+  const rawItems: unknown[] =
+    Array.isArray(data?.items?.items) ? data.items.items :
+    Array.isArray(data?.tracks?.items) ? data.tracks.items : []
+
+  return rawItems
+    .map((item: unknown): Track | null => {
+      const i = item as Record<string, unknown>
+
+      // Format A: { track: { id, name, uri, ... } }  (classic Spotify wrapper)
+      const nested = i.track as Record<string, unknown> | null | undefined
+      if (nested && nested.id && nested.name) return nested as unknown as Track
+
+      // Format B: track fields are directly on the item (flattened)
+      if (i.id && i.name && i.uri) return i as unknown as Track
+
+      // Format C: podcast episode — skip
+      return null
+    })
+    .filter(Boolean) as Track[]
 }
 
 export async function toggleShuffle(state: boolean): Promise<void> {
