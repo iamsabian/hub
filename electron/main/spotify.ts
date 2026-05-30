@@ -68,14 +68,20 @@ export async function playPlaylist(uri: string): Promise<void> {
 }
 
 export async function getPlaylistTracks(playlistId: string): Promise<Track[]> {
-  const data = await api(`/playlists/${playlistId}/tracks?limit=100&market=from_token`)
-  const rawItems: unknown[] = Array.isArray(data?.items) ? data.items : []
+  const data = await api(`/playlists/${playlistId}/tracks?limit=100`)
+  // Spotify wraps the array in a PagingObject: data.items = { items: [...], total, ... }
+  // The actual track array is at data.items.items — same pattern we confirmed for the playlist endpoint
+  const rawItems: unknown[] =
+    Array.isArray(data?.items?.items) ? data.items.items :
+    Array.isArray(data?.items) ? data.items : []
   return rawItems
     .map((item: unknown): Track | null => {
       const i = item as Record<string, unknown>
+      // Standard format: { added_at, added_by, track: { id, name, ... } }
       const t = i.track as Record<string, unknown> | null | undefined
-      if (t && t.id && t.name) return t as unknown as Track
-      if (i.id && i.name && i.uri) return i as unknown as Track
+      if (t?.id) return t as unknown as Track
+      // Fallback: track fields directly on item (like queue items)
+      if (i.id) return i as unknown as Track
       return null
     })
     .filter(Boolean) as Track[]
