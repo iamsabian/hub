@@ -86,24 +86,42 @@ export async function spotifyGetToken(): Promise<string> {
 
   if (Date.now() < tokens.expiresAt - 60_000) return tokens.accessToken
 
-  const settings = store.get('settings')!
-  const res = await fetch('https://accounts.spotify.com/api/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      grant_type: 'refresh_token',
-      refresh_token: tokens.refreshToken,
-      client_id: settings.spotifyClientId!,
-    }),
-  })
-  const json = (await res.json()) as { access_token: string; refresh_token?: string; expires_in: number }
-  store.set('spotifyTokens', {
-    accessToken: json.access_token,
-    refreshToken: json.refresh_token ?? tokens.refreshToken,
-    expiresAt: Date.now() + json.expires_in * 1000,
-  })
-  return json.access_token
+  // Lock: prevent concurrent refreshes (Spotify rotates refresh tokens,
+  // so two simultaneous refreshes would cause the second one to fail)
+  if (!spotifyRefreshLock) {
+    spotifyRefreshLock = (async () => {
+      // Re-read tokens in case another refresh already completed
+      const current = store.get('spotifyTokens')!
+      if (Date.now() < current.expiresAt - 60_000) return current.accessToken
+
+      const settings = store.get('settings')!
+      const res = await fetch('https://accounts.spotify.com/api/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          grant_type: 'refresh_token',
+          refresh_token: current.refreshToken,
+          client_id: settings.spotifyClientId!,
+        }),
+      })
+      if (!res.ok) {
+        const err = await res.text()
+        throw new Error(`Spotify token refresh failed (${res.status}): ${err}`)
+      }
+      const json = (await res.json()) as { access_token: string; refresh_token?: string; expires_in: number }
+      store.set('spotifyTokens', {
+        accessToken: json.access_token,
+        refreshToken: json.refresh_token ?? current.refreshToken,
+        expiresAt: Date.now() + json.expires_in * 1000,
+      })
+      return json.access_token
+    })().finally(() => { spotifyRefreshLock = null })
+  }
+
+  return spotifyRefreshLock
 }
+
+let spotifyRefreshLock: Promise<string> | null = null
 
 export function spotifyDisconnect(): void {
   store.clear('spotifyTokens')
