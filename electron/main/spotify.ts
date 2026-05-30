@@ -15,6 +15,40 @@ async function api(path: string, method = 'GET', body?: unknown) {
   return res.json()
 }
 
+// ── Devices ───────────────────────────────────────────────────────────────────
+
+export interface Device {
+  id: string
+  name: string
+  type: string
+  is_active: boolean
+  volume_percent: number
+}
+
+export async function getDevices(): Promise<Device[]> {
+  const data = await api('/me/player/devices')
+  return data?.devices ?? []
+}
+
+/** Returns the active device ID, or transfers to the first available one.
+ *  Throws a clear message if no devices are found at all. */
+async function ensureDevice(): Promise<string> {
+  const devices = await getDevices()
+  if (devices.length === 0) {
+    throw new Error('No Spotify devices found. Open the Spotify app on any device first.')
+  }
+  const active = devices.find((d) => d.is_active)
+  if (active) return active.id
+  // Transfer playback to the first available device (without auto-playing)
+  const device = devices[0]
+  await api('/me/player', 'PUT', { device_ids: [device.id], play: false })
+  // Small wait for Spotify to register the transfer
+  await new Promise((r) => setTimeout(r, 500))
+  return device.id
+}
+
+// ── Tracks ────────────────────────────────────────────────────────────────────
+
 export interface Track {
   id: string
   name: string
@@ -26,8 +60,9 @@ export interface Track {
 export interface PlaybackState {
   is_playing: boolean
   progress_ms: number
+  shuffle_state: boolean
   item: Track | null
-  device: { volume_percent: number; name: string } | null
+  device: { id: string; volume_percent: number; name: string } | null
 }
 
 export async function getCurrentPlayback(): Promise<PlaybackState | null> {
@@ -35,7 +70,12 @@ export async function getCurrentPlayback(): Promise<PlaybackState | null> {
 }
 
 export async function playPause(isPlaying: boolean): Promise<void> {
-  await api(`/me/player/${isPlaying ? 'pause' : 'play'}`, 'PUT')
+  if (isPlaying) {
+    await api('/me/player/pause', 'PUT')
+  } else {
+    const deviceId = await ensureDevice()
+    await api(`/me/player/play?device_id=${deviceId}`, 'PUT')
+  }
 }
 
 export async function skipNext(): Promise<void> {
@@ -50,11 +90,13 @@ export async function setVolume(percent: number): Promise<void> {
   await api(`/me/player/volume?volume_percent=${Math.round(percent)}`, 'PUT')
 }
 
+// ── Playlists ─────────────────────────────────────────────────────────────────
+
 export interface Playlist {
   id: string
   name: string
   images: { url: string }[]
-  tracks: { total: number }
+  items: { total: number }
   uri: string
 }
 
@@ -64,12 +106,13 @@ export async function getPlaylists(): Promise<Playlist[]> {
 }
 
 export async function playPlaylist(uri: string): Promise<void> {
-  await api('/me/player/play', 'PUT', { context_uri: uri })
+  const deviceId = await ensureDevice()
+  await api(`/me/player/play?device_id=${deviceId}`, 'PUT', { context_uri: uri })
 }
 
 export async function getPlaylistTracks(playlistId: string): Promise<Track[]> {
-  // /tracks returns 403 — the correct current endpoint is /items
-  // Each entry has { added_at, added_by, item: { id, name, uri, artists, album, duration_ms } }
+  // /tracks returns 403 — correct endpoint is /items
+  // Each entry: { added_at, added_by, item: { id, name, uri, artists, album, duration_ms } }
   const data = await api(`/playlists/${playlistId}/items?limit=100`)
   const rawItems: unknown[] = Array.isArray(data?.items) ? data.items : []
   return rawItems
@@ -81,12 +124,18 @@ export async function getPlaylistTracks(playlistId: string): Promise<Track[]> {
     .filter(Boolean) as Track[]
 }
 
+export async function playTrack(uri: string): Promise<void> {
+  const deviceId = await ensureDevice()
+  await api(`/me/player/play?device_id=${deviceId}`, 'PUT', { uris: [uri] })
+}
+
 export async function toggleShuffle(state: boolean): Promise<void> {
   await api(`/me/player/shuffle?state=${state}`, 'PUT')
 }
 
 export async function addToQueue(uri: string): Promise<void> {
-  await api(`/me/player/queue?uri=${encodeURIComponent(uri)}`, 'POST')
+  const deviceId = await ensureDevice()
+  await api(`/me/player/queue?uri=${encodeURIComponent(uri)}&device_id=${deviceId}`, 'POST')
 }
 
 export interface QueueItem {

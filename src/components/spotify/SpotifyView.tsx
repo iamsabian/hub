@@ -49,6 +49,7 @@ export default function SpotifyView({ connected }: Props) {
   const [playlistTracks, setPlaylistTracks] = useState<SpotifyTrack[]>([])
   const [loadingTracks, setLoadingTracks] = useState(false)
   const [queuedUris, setQueuedUris] = useState<Set<string>>(new Set())
+  const [activeDevice, setActiveDevice] = useState<string>('')
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const fetchPlayback = useCallback(async () => {
@@ -56,7 +57,16 @@ export default function SpotifyView({ connected }: Props) {
     try {
       const p = await window.hub.spotifyGetCurrentTrack()
       setPlayback(p)
-      if (p?.device) setVolume(p.device.volume_percent)
+      if (p?.device) {
+        setVolume(p.device.volume_percent)
+        setActiveDevice(p.device.name)
+      } else {
+        // No active playback — still fetch available devices to show
+        window.hub.spotifyGetDevices().then((devices) => {
+          const d = devices.find((x) => x.is_active) ?? devices[0]
+          setActiveDevice(d ? d.name : '')
+        }).catch(() => {})
+      }
       setError('')
     } catch (e: unknown) {
       setError((e as Error).message)
@@ -90,6 +100,15 @@ export default function SpotifyView({ connected }: Props) {
       setPlaylistTracks([])
     } finally {
       setLoadingTracks(false)
+    }
+  }
+
+  async function handlePlayTrack(track: SpotifyTrack) {
+    try {
+      await window.hub.spotifyPlayTrack((track as unknown as Record<string, string>).uri ?? track.id)
+      setTimeout(fetchPlayback, 800)
+    } catch (e: unknown) {
+      setError((e as Error).message)
     }
   }
 
@@ -220,6 +239,13 @@ export default function SpotifyView({ connected }: Props) {
           />
           <span className="text-xs text-zinc-600 w-6 text-right">{volume}</span>
         </div>
+
+        {/* Active device */}
+        {activeDevice && (
+          <p className="text-xs text-zinc-600 mt-1.5 truncate">
+            🔊 {activeDevice}
+          </p>
+        )}
       </div>
 
       {error && <p className="text-red-400 text-xs px-4 py-1">{error}</p>}
@@ -302,7 +328,7 @@ export default function SpotifyView({ connected }: Props) {
 
             <ul className="overflow-y-auto flex-1">
               {playlistTracks.map((t, i) => (
-                <li key={`${t.id}-${i}`} className="flex items-center gap-3 px-4 py-2 hover:bg-zinc-800/50 group">
+                <li key={`${t.id}-${i}`} className="flex items-center gap-3 px-4 py-2 hover:bg-zinc-800/50 group cursor-pointer" onClick={() => handlePlayTrack(t)}>
                   {t.album?.images?.[0] ? (
                     <img src={t.album.images[0].url} alt="" className="w-8 h-8 rounded shrink-0" />
                   ) : (

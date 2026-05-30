@@ -88,6 +88,14 @@ ipcMain.handle('spotify:get-queue', async () => {
   return spotify.getQueue()
 })
 
+ipcMain.handle('spotify:get-devices', async () => {
+  return spotify.getDevices()
+})
+
+ipcMain.handle('spotify:play-track', async (_e, uri: string) => {
+  await spotify.playTrack(uri)
+})
+
 ipcMain.handle('spotify:get-playlist-tracks', async (_e, id: string) => {
   return spotify.getPlaylistTracks(id)
 })
