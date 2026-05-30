@@ -71,12 +71,9 @@ export async function getPlaylistTracks(playlistId: string): Promise<Track[]> {
   const data = await api(`/playlists/${playlistId}`)
   const rawItems: unknown[] = Array.isArray(data?.items?.items) ? data.items.items : []
   const firstItem = rawItems[0] as Record<string, unknown> | undefined
-  const firstTrack = firstItem?.track
   throw new Error(
-    `DEBUG trackExists=${firstTrack !== undefined} ` +
-    `trackNull=${firstTrack === null} ` +
-    `trackKeys=${firstTrack && typeof firstTrack === 'object' ? Object.keys(firstTrack as object).join(',') : 'n/a'} ` +
-    `trackName=${(firstTrack as Record<string,unknown>)?.name}`
+    `DEBUG firstItemKeys=${Object.keys(firstItem || {}).join(',')} | ` +
+    `name=${firstItem?.name} | id=${firstItem?.id} | uri=${firstItem?.uri}`
   )
 }
 
